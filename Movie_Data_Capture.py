@@ -386,13 +386,16 @@ def create_data_and_move(file_path: str, zero_op, oCC):
     debug = config.getInstance().debug()
     n_number = get_number(debug, os.path.basename(file_path))
     file_path = os.path.abspath(file_path)
+    original_filename = os.path.basename(file_path)
+    original_filename_without_ext = os.path.splitext(original_filename)[0]
+    # breakpoint()
 
     if debug == True:
         print(f"[!] [{n_number}] As Number making data for '{file_path}'")
         if zero_op:
             return
         if n_number:
-            core_main(file_path, n_number, oCC)
+            core_main(file_path, n_number, oCC, original_filename_without_ext)
         else:
             print("[-] number empty ERROR")
             moveFailedFolder(file_path)
@@ -403,7 +406,7 @@ def create_data_and_move(file_path: str, zero_op, oCC):
             if zero_op:
                 return
             if n_number:
-                core_main(file_path, n_number, oCC)
+                core_main(file_path, n_number, oCC, original_filename_without_ext)
             else:
                 raise ValueError("number empty")
             print("[*]======================================================")
@@ -540,6 +543,8 @@ def main():
             folder_path = os.path.abspath(".")
 
         movie_list = movie_lists(folder_path, regexstr)
+        print("MOVIE_LIST-----------------------------------------------------------------------")
+        print(zero_op, oCC)
 
         count = 0
         count_all = str(len(movie_list))
@@ -550,6 +555,7 @@ def main():
             stop_count = 999999
         else:
             count_all = str(min(len(movie_list), stop_count))
+
 
         for movie_path in movie_list:  # 遍历电影列表 交给core处理
             count = count + 1

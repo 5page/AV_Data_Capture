@@ -270,7 +270,7 @@ def image_download(cover, number, leak_word, c_word, hack_word, path, filepath):
     shutil.copyfile(full_filepath, os.path.join(path, f"{number}{leak_word}{c_word}{hack_word}-thumb.jpg"))
 
 
-def print_files(path, leak_word, c_word, naming_rule, part, cn_sub, json_data, filepath, tag, actor_list, liuchu, uncensored, hack_word):
+def print_files(path, leak_word, c_word, naming_rule, part, cn_sub, json_data, filepath, tag, actor_list, liuchu, uncensored, hack_word,o_name=''):
     title, studio, year, outline, runtime, director, actor_photo, release, number, cover, trailer, website, series, label = get_info(json_data)
     if config.getInstance().main_mode() == 3:  # 模式3下，由于视频文件不做任何改变，.nfo文件必须和视频文件名称除后缀外完全一致，KODI等软件方可支持
         nfo_path = str(Path(filepath).with_suffix('.nfo'))
@@ -303,9 +303,14 @@ def print_files(path, leak_word, c_word, naming_rule, part, cn_sub, json_data, f
             print("  <plot><![CDATA[" + outline + "]]></plot>", file=code)
             print("  <runtime>" + str(runtime).replace(" ", "") + "</runtime>", file=code)
             print("  <director>" + director + "</director>", file=code)
-            print("  <poster>" + number + leak_word + c_word + hack_word + "-poster.jpg</poster>", file=code)
-            print("  <thumb>" + number + leak_word + c_word + hack_word + "-thumb.jpg</thumb>", file=code)
-            print("  <fanart>" + number + leak_word + c_word + hack_word + '-fanart.jpg' + "</fanart>", file=code)
+            if o_name is '':
+                print("  <poster>" + number + leak_word + c_word + hack_word + "-poster.jpg</poster>", file=code)
+                print("  <thumb>" + number + leak_word + c_word + hack_word + "-thumb.jpg</thumb>", file=code)
+                print("  <fanart>" + number + leak_word + c_word + hack_word + '-fanart.jpg' + "</fanart>", file=code)
+            else:
+                print("  <poster>" + o_name + leak_word + c_word + hack_word + "-poster.jpg</poster>", file=code)
+                print("  <thumb>" + o_name + leak_word + c_word + hack_word + "-thumb.jpg</thumb>", file=code)
+                print("  <fanart>" + o_name + leak_word + c_word + hack_word + '-fanart.jpg' + "</fanart>", file=code)
             try:
                 for key in actor_list:
                     print("  <actor>", file=code)
@@ -589,7 +594,7 @@ def debug_print(data: json):
         pass
 
 
-def core_main(file_path, number_th, oCC):
+def core_main(file_path, number_th, oCC, original_filename):
     conf = config.getInstance()
     # =======================================================================初始化所需变量
     multi_part = 0
@@ -606,7 +611,9 @@ def core_main(file_path, number_th, oCC):
     # 下面被注释的变量不需要
     #rootpath= os.getcwd
     number = number_th
+    o_filename = original_filename
     json_data = get_data_from_json(number, oCC)  # 定义番号
+    # breakpoint()
 
     # Return if blank dict returned (data not found)
     if not json_data:
@@ -715,10 +722,12 @@ def core_main(file_path, number_th, oCC):
 
         # 检查小封面, 如果image cut为3，则下载小封面
         if imagecut == 3:
-            small_cover_check(path, number, json_data.get('cover_small'), leak_word, c_word, hack_word, filepath)
+            # small_cover_check(path, number, json_data.get('cover_small'), leak_word, c_word, hack_word, filepath)
+            small_cover_check(path, o_filename, json_data.get('cover_small'), '', '', '', filepath)
 
         # creatFolder会返回番号路径
-        image_download(json_data.get('cover'), number, leak_word, c_word, hack_word, path, filepath)
+        # image_download(json_data.get('cover'), number, leak_word, c_word, hack_word, path, filepath)
+        image_download(json_data.get('cover'), o_filename, '', '', '', path, filepath)
 
         if not multi_part or part.lower() == '-cd1':
             # 下载预告片
@@ -730,14 +739,15 @@ def core_main(file_path, number_th, oCC):
                 extrafanart_download(json_data.get('extrafanart'), path, number, filepath)
 
         # 裁剪图
-        cutImage(imagecut, path, number, leak_word, c_word, hack_word)
+        # cutImage(imagecut, path, number, leak_word, c_word, hack_word)
+        cutImage(imagecut, path, o_filename, '', '', '')
 
         # 添加水印
-        poster_path = os.path.join(path, f"{number}{leak_word}{c_word}{hack_word}-poster.jpg")
-        thumb_path = os.path.join(path, f"{number}{leak_word}{c_word}{hack_word}-thumb.jpg")
+        poster_path = os.path.join(path, f"{o_filename}{''}{''}{''}-poster.jpg")
+        thumb_path = os.path.join(path, f"{o_filename}{''}{''}{''}-thumb.jpg")
         if conf.is_watermark():
             add_mark(poster_path, thumb_path, cn_sub, leak, uncensored, hack)
 
         # 最后输出.nfo元数据文件，以完成.nfo文件创建作为任务成功标志
-        print_files(path, leak_word, c_word, json_data.get('naming_rule'), part, cn_sub, json_data, filepath,
-                    tag, json_data.get('actor_list'), liuchu, uncensored, hack_word)
+        print_files(path, '', '', json_data.get('naming_rule'), part, cn_sub, json_data, filepath,
+                    tag, json_data.get('actor_list'), liuchu, uncensored, '', o_name=o_filename)
